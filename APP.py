@@ -7,7 +7,7 @@ import joblib
 from sklearn.datasets import load_iris
 
 # Load model dari file model_saya.pkl
-model = joblib.load("model_saya.pkl")
+model = joblib.load("naive_bayes_model.pkl")
 
 # Load dataset Iris
 iris = load_iris()
