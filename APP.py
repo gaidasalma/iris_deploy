@@ -7,7 +7,7 @@ import joblib
 from sklearn.datasets import load_iris
 
 # Load model dari file model_saya.pkl
-model = joblib.load("naive_bayes_model.pkl")
+model = joblib.load("model_saya.pkl")
 
 # Load dataset Iris
 iris = load_iris()
@@ -54,10 +54,9 @@ elif page == "Prediksi":
 
     input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
 
-  if st.button("Prediksi"):
+    if st.button("Prediksi"):
         pred = model.predict(input_data)[0]
         st.success(f"🌸 Prediksi: **{target_names[pred]}**")
-
 
 # Halaman 3: Visualisasi
 elif page == "Visualisasi":
