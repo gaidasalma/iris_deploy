@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load model
-with open("model.pkl", "rb") as f:
+with open("naive_bayes_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 # Load dataset
