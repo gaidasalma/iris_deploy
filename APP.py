@@ -54,9 +54,11 @@ elif page == "Prediksi":
 
     input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
 
-    if st.button("Prediksi"):
-        pred = model.predict(input_data)[0]
-        st.success(f"🌸 Prediksi: **{target_names[pred]}**")
+   if st.button("Prediksi"):
+    pred = model.predict(input_data)
+    pred_int = int(pred[0])  # pastikan ini integer
+    pred_label = target_names[pred_int]
+    st.success(f"🌸 Prediksi: **{pred_label}**")
 
 # Halaman 3: Visualisasi
 elif page == "Visualisasi":
