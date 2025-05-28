@@ -4,88 +4,72 @@ import numpy as np
 import joblib
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_iris
 
 # Load dataset
 @st.cache_data
 def load_data():
-    iris = load_iris()
-    df = pd.DataFrame(iris.data, columns=iris.feature_names)
-    df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
-    return df, iris.target_names
+    url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+    return pd.read_csv(url)
 
 # Load model
 @st.cache_resource
 def load_model():
     return joblib.load('naive_bayes_model.pkl')
 
-# Muat data dan model
-df, target_names = load_data()
+df = load_data()
 model = load_model()
 
-# Sidebar untuk navigasi
-st.sidebar.title("Navigasi")
-page = st.sidebar.radio("Menu", ["Deskripsi Data", "Prediksi", "Visualisasi"])
+# Sidebar for page selection
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Data Description", "Prediction", "Visualization"])
 
-# Halaman 1: Deskripsi Data
-if page == "Deskripsi Data":
-    st.title("📊 Deskripsi Dataset Iris")
+if page == "Data Description":
+    st.title("Iris Dataset Description")
     st.write("""
-        Dataset Iris terdiri dari 150 bunga dari tiga spesies:
-        - Setosa
-        - Versicolor
-        - Virginica
-
-        Masing-masing memiliki 4 fitur:
-        - Sepal length (cm)
-        - Sepal width (cm)
-        - Petal length (cm)
-        - Petal width (cm)
+    The Iris dataset contains 150 samples of iris flowers from three different species (setosa, versicolor, virginica).
+    Each sample has four features:
+    - sepal length (cm)
+    - sepal width (cm)
+    - petal length (cm)
+    - petal width (cm)
     """)
-    st.subheader("Contoh Data")
+    st.write("Here is a preview of the data:")
     st.dataframe(df.head())
 
-    st.subheader("Statistik Ringkasan")
+    st.write("Summary statistics:")
     st.write(df.describe())
 
-    st.subheader("Distribusi Spesies")
+    st.write("Species distribution:")
     st.bar_chart(df['species'].value_counts())
 
-# Halaman 2: Prediksi
-elif page == "Prediksi":
-    st.title("🔍 Prediksi Spesies Iris")
+elif page == "Prediction":
+    st.title("Iris Species Prediction")
+    st.write("Enter the features below:")
 
-    # Ambil range nilai dari data
-    def col_min(col): return float(df[col].min())
-    def col_max(col): return float(df[col].max())
-    def col_mean(col): return float(df[col].mean())
+    sepal_length = st.slider("Sepal length (cm)", float(df['sepal_length'].min()), float(df['sepal_length'].max()), float(df['sepal_length'].mean()))
+    sepal_width = st.slider("Sepal width (cm)", float(df['sepal_width'].min()), float(df['sepal_width'].max()), float(df['sepal_width'].mean()))
+    petal_length = st.slider("Petal length (cm)", float(df['petal_length'].min()), float(df['petal_length'].max()), float(df['petal_length'].mean()))
+    petal_width = st.slider("Petal width (cm)", float(df['petal_width'].min()), float(df['petal_width'].max()), float(df['petal_width'].mean()))
 
-    sepal_length = st.slider("Sepal length (cm)", col_min('sepal length (cm)'), col_max('sepal length (cm)'), col_mean('sepal length (cm)'))
-    sepal_width = st.slider("Sepal width (cm)", col_min('sepal width (cm)'), col_max('sepal width (cm)'), col_mean('sepal width (cm)'))
-    petal_length = st.slider("Petal length (cm)", col_min('petal length (cm)'), col_max('petal length (cm)'), col_mean('petal length (cm)'))
-    petal_width = st.slider("Petal width (cm)", col_min('petal width (cm)'), col_max('petal width (cm)'), col_mean('petal width (cm)'))
+    if st.button("Predict"):
+        input_features = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+        prediction = model.predict(input_features)[0]
+        st.success(f"Predicted Iris Species: {prediction.capitalize()}")
 
-    input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+elif page == "Visualization":
+    st.title("Data Visualization")
 
-    if st.button("Prediksi"):
-        pred = model.predict(input_data)[0]
-       st.success(f"🌸 Spesies yang Diprediksi: **{pred.capitalize()}**")
+    st.write("Scatter plot of sepal length vs sepal width, colored by species:")
+    fig, ax = plt.subplots()
+    sns.scatterplot(data=df, x='sepal_length', y='sepal_width', hue='species', ax=ax)
+    st.pyplot(fig)
 
-# Halaman 3: Visualisasi
-elif page == "Visualisasi":
-    st.title("📈 Visualisasi Dataset Iris")
-
-    st.subheader("Scatterplot Sepal Length vs Sepal Width")
-    fig1, ax1 = plt.subplots()
-    sns.scatterplot(data=df, x='sepal length (cm)', y='sepal width (cm)', hue='species', ax=ax1)
-    st.pyplot(fig1)
-
-    st.subheader("Boxplot Petal Length per Spesies")
+    st.write("Boxplot of petal length by species:")
     fig2, ax2 = plt.subplots()
-    sns.boxplot(x='species', y='petal length (cm)', data=df, ax=ax2)
+    sns.boxplot(x='species', y='petal_length', data=df, ax=ax2)
     st.pyplot(fig2)
 
-    st.subheader("Pairplot Semua Fitur")
-    st.write("Harap tunggu sejenak...")
+    st.write("Pairplot of all features:")
+    st.write("Generating pairplot, please wait...")
     pairplot_fig = sns.pairplot(df, hue='species')
     st.pyplot(pairplot_fig.fig)
