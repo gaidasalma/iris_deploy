@@ -69,7 +69,7 @@ elif page == "Prediksi":
 
     if st.button("Prediksi"):
         pred = model.predict(input_data)[0]
-        st.success(f"🌸 Spesies yang Diprediksi: **{target_names[pred].capitalize()}**")
+       st.success(f"🌸 Spesies yang Diprediksi: **{pred.capitalize()}**")
 
 # Halaman 3: Visualisasi
 elif page == "Visualisasi":
