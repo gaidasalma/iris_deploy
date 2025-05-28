@@ -1,73 +1,75 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import joblib
 import seaborn as sns
 import matplotlib.pyplot as plt
-import joblib
-from sklearn.datasets import load_iris
 
-# Load model dari file model_saya.pkl
-model = joblib.load("naive_bayes_model.pkl")
+# Load dataset
+@st.cache_data
+def load_data():
+    url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+    return pd.read_csv(url)
 
-# Load dataset Iris
-iris = load_iris()
-X = iris.data
-y = iris.target
-feature_names = iris.feature_names
-target_names = iris.target_names
+# Load model
+@st.cache_resource
+def load_model():
+    return joblib.load('naive_bayes_model_iris_dataset.pkl')
 
-# DataFrame untuk eksplorasi dan visualisasi
-df = pd.DataFrame(X, columns=feature_names)
-df["target"] = y
-df["target_name"] = df["target"].apply(lambda i: target_names[i])
+df = load_data()
+model = load_model()
 
-# Konfigurasi halaman
-st.set_page_config(page_title="Klasifikasi Iris", layout="centered")
+# Sidebar for page selection
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Data Description", "Prediction", "Visualization"])
 
-# Sidebar navigasi
-page = st.sidebar.radio("Navigasi", ["Deskripsi Data", "Prediksi", "Visualisasi"])
-
-# Halaman 1: Deskripsi
-if page == "Deskripsi Data":
-    st.title("📄 Deskripsi Dataset Iris")
+if page == "Data Description":
+    st.title("Iris Dataset Description")
     st.write("""
-        Dataset Iris terdiri dari 150 data bunga dari 3 spesies:
-        - Setosa
-        - Versicolor
-        - Virginica
+    The Iris dataset contains 150 samples of iris flowers from three different species (setosa, versicolor, virginica).
+    Each sample has four features:
+    - sepal length (cm)
+    - sepal width (cm)
+    - petal length (cm)
+    - petal width (cm)
     """)
+    st.write("Here is a preview of the data:")
     st.dataframe(df.head())
 
-    st.markdown("### Fitur:")
-    for f in feature_names:
-        st.markdown(f"- {f.capitalize()}")
+    st.write("Summary statistics:")
+    st.write(df.describe())
 
-# Halaman 2: Prediksi
-elif page == "Prediksi":
-    st.title("🔍 Prediksi Spesies Iris")
-    st.markdown("Masukkan nilai-nilai fitur bunga:")
+    st.write("Species distribution:")
+    st.bar_chart(df['species'].value_counts())
 
-    sepal_length = st.slider("Sepal Length (cm)", 4.0, 8.0, 5.1)
-    sepal_width = st.slider("Sepal Width (cm)", 2.0, 4.5, 3.5)
-    petal_length = st.slider("Petal Length (cm)", 1.0, 7.0, 1.4)
-    petal_width = st.slider("Petal Width (cm)", 0.1, 2.5, 0.2)
+elif page == "Prediction":
+    st.title("Iris Species Prediction")
+    st.write("Enter the features below:")
 
-    input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+    sepal_length = st.slider("Sepal length (cm)", float(df['sepal_length'].min()), float(df['sepal_length'].max()), float(df['sepal_length'].mean()))
+    sepal_width = st.slider("Sepal width (cm)", float(df['sepal_width'].min()), float(df['sepal_width'].max()), float(df['sepal_width'].mean()))
+    petal_length = st.slider("Petal length (cm)", float(df['petal_length'].min()), float(df['petal_length'].max()), float(df['petal_length'].mean()))
+    petal_width = st.slider("Petal width (cm)", float(df['petal_width'].min()), float(df['petal_width'].max()), float(df['petal_width'].mean()))
 
-    if st.button("Prediksi"):
-        pred = model.predict(input_data)[0]
-        st.success(f"🌸 Prediksi: **{target_names[pred]}**")
+    if st.button("Predict"):
+        input_features = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
+        prediction = model.predict(input_features)[0]
+        st.success(f"Predicted Iris Species: *{prediction.capitalize()}*")
 
-# Halaman 3: Visualisasi
-elif page == "Visualisasi":
-    st.title("📊 Visualisasi Dataset Iris")
-    st.markdown("Analisis visual dari fitur-fitur dalam dataset.")
+elif page == "Visualization":
+    st.title("Data Visualization")
 
-    st.subheader("Pairplot")
-    fig = sns.pairplot(df, hue="target_name")
+    st.write("Scatter plot of sepal length vs sepal width, colored by species:")
+    fig, ax = plt.subplots()
+    sns.scatterplot(data=df, x='sepal_length', y='sepal_width', hue='species', ax=ax)
     st.pyplot(fig)
 
-    st.subheader("Heatmap Korelasi")
-    fig2, ax = plt.subplots()
-    sns.heatmap(df.iloc[:, :4].corr(), annot=True, cmap="YlGnBu", ax=ax)
+    st.write("Boxplot of petal length by species:")
+    fig2, ax2 = plt.subplots()
+    sns.boxplot(x='species', y='petal_length', data=df, ax=ax2)
     st.pyplot(fig2)
+
+    st.write("Pairplot of all features:")
+    st.write("Generating pairplot, please wait...")
+    pairplot_fig = sns.pairplot(df, hue='species')
+    st.pyplot(pairplot_fig.fig)
