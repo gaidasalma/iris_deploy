@@ -14,7 +14,7 @@ def load_data():
 # Load model
 @st.cache_resource
 def load_model():
-    return joblib.load('naive_bayes_model_iris_dataset.pkl')
+    return joblib.load('naive_bayes_model.pkl')
 
 df = load_data()
 model = load_model()
